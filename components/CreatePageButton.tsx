@@ -12,6 +12,7 @@ export function CreatePageButton() {
     const newPage: Page = {
       id,
       title: "Nueva Página",
+      content: "",
       createdAt: new Date().toISOString()
     }
     const pages = getPages()
