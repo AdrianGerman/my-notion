@@ -8,7 +8,12 @@ export function PageList() {
   const [pages, setPages] = useState<Page[]>([])
 
   useEffect(() => {
-    setPages(getPages())
+    const loadedPages = getPages()
+    const sortedPages = loadedPages.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    setPages(sortedPages)
   }, [])
 
   if (pages.length === 0)
