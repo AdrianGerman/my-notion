@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { Page } from "@/types/page"
 import Link from "next/link"
-import { getPages } from "@/lib/storage"
+import { getPages, savePages } from "@/lib/storage"
 
 export function PageList() {
   const [pages, setPages] = useState<Page[]>([])
@@ -14,6 +14,16 @@ export function PageList() {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
     setPages(sortedPages)
+  }
+
+  function deletePage(id: string) {
+    if (!confirm("¿Seguro que quieres borrar esta página?")) return
+    const updated = getPages().filter((p) => p.id !== id)
+    savePages(updated)
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: "notion-mini-pages" })
+    )
+    loadPages()
   }
 
   useEffect(() => {
@@ -39,7 +49,7 @@ export function PageList() {
   return (
     <ul className="space-y-3">
       {pages.map((page) => (
-        <li key={page.id}>
+        <li key={page.id} className="relative group">
           <Link
             href={`/page/${page.id}`}
             className="block bg-[#2a2a2a] border border-gray-600 rounded-lg px-4 py-3 hover:bg-[#333] transition-all shadow"
@@ -49,6 +59,14 @@ export function PageList() {
               {new Date(page.createdAt).toLocaleString()}
             </p>
           </Link>
+
+          <button
+            onClick={() => deletePage(page.id)}
+            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition"
+            title="Borrar página"
+          >
+            ✕
+          </button>
         </li>
       ))}
     </ul>
