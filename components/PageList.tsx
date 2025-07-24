@@ -7,13 +7,26 @@ import { getPages } from "@/lib/storage"
 export function PageList() {
   const [pages, setPages] = useState<Page[]>([])
 
-  useEffect(() => {
+  function loadPages() {
     const loadedPages = getPages()
     const sortedPages = loadedPages.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
     setPages(sortedPages)
+  }
+
+  useEffect(() => {
+    loadPages()
+
+    function handleStorageChange(e: StorageEvent) {
+      if (e.key === "notion-mini-pages") {
+        loadPages()
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
   if (pages.length === 0)

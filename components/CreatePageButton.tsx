@@ -20,6 +20,11 @@ export function CreatePageButton() {
     }
     const pages = getPages()
     savePages([...pages, newPage])
+
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: "notion-mini-pages" })
+    )
+
     setIsOpen(false)
     setTitle("")
     router.push(`/page/${id}`)
