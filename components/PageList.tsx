@@ -71,7 +71,7 @@ export function PageList() {
 
               <button
                 onClick={() => requestDelete(page)}
-                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition"
+                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-transform duration-300 hover:scale-105 cursor-pointer"
                 title="Borrar página"
               >
                 ✕
