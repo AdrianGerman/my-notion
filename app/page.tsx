@@ -3,7 +3,7 @@ import { CreatePageButton } from "@/components/CreatePageButton"
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#0f0f0f] text-gray-100 px-6 py-10">
+    <main className="min-h-screen bg-[#0f0f0f] text-gray-100 px-6 py-10 animate-fadeIn">
       <div className="max-w-3xl mx-auto space-y-8">
         <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-4xl font-bold tracking-tight">Mis Páginas</h1>

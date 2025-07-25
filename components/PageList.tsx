@@ -57,8 +57,15 @@ export function PageList() {
         </p>
       ) : (
         <ul className="space-y-3">
-          {pages.map((page) => (
-            <li key={page.id} className="relative group">
+          {pages.map((page, i) => (
+            <li
+              key={page.id}
+              className={`relative group animate-fadeIn`}
+              style={{
+                animationDelay: `${i * 50}ms`,
+                animationFillMode: "forwards"
+              }}
+            >
               <Link
                 href={`/page/${page.id}`}
                 className="block bg-[#2a2a2a] border border-gray-600 rounded-lg px-4 py-3 hover:bg-[#333] transition-all shadow"
@@ -68,14 +75,6 @@ export function PageList() {
                   {new Date(page.createdAt).toLocaleString()}
                 </p>
               </Link>
-
-              <button
-                onClick={() => requestDelete(page)}
-                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-transform duration-300 hover:scale-105 cursor-pointer"
-                title="Borrar página"
-              >
-                ✕
-              </button>
             </li>
           ))}
         </ul>

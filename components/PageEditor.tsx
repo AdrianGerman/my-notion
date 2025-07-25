@@ -28,7 +28,7 @@ export default function PageEditor() {
   if (page === null) return notFound()
 
   return (
-    <main className="p-6 space-y-6 text-gray-100">
+    <main className="p-6 space-y-6 text-gray-100 animate-fadeIn">
       <input
         value={page.title}
         onChange={(e) => updatePage({ title: e.target.value })}
