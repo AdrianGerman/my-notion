@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 import { Page } from "@/types/page"
 import Link from "next/link"
 import { getPages } from "@/lib/storage"
@@ -10,6 +11,7 @@ export default function Sidebar() {
   const [pages, setPages] = useState<Page[]>([])
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const load = () => {
@@ -87,7 +89,12 @@ export default function Sidebar() {
                 key={page.id}
                 href={`/page/${page.id}`}
                 onClick={() => setOpen(false)}
-                className="block px-3 py-2 rounded-lg hover:bg-[#1f1f1f] text-sm truncate"
+                className={`block px-3 py-2 rounded-lg text-sm truncate transition
+    ${
+      pathname === `/page/${page.id}`
+        ? "bg-[#1f1f1f] text-white font-semibold border border-blue-500"
+        : "hover:bg-[#1f1f1f] text-gray-300"
+    }`}
               >
                 {page.title || "Sin título"}
               </Link>
