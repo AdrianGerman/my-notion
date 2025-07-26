@@ -5,12 +5,14 @@ import { Page } from "@/types/page"
 import Link from "next/link"
 import { getPages } from "@/lib/storage"
 import { CreatePageButton } from "@/components/CreatePageButton"
+import { CreatePageModal } from "@/components/CreatePageModal"
 import { Menu, X } from "lucide-react"
 
 export default function Sidebar() {
   const [pages, setPages] = useState<Page[]>([])
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -70,15 +72,22 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <CreatePageButton />
+        <div className="flex justify-center items-center gap-2">
+          <button
+            onClick={() => setCreateOpen(true)}
+            className=" bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+          >
+            +
+          </button>
 
-        <input
-          type="text"
-          placeholder="Buscar página..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="mt-6 w-full px-3 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
-        />
+          <input
+            type="text"
+            placeholder="Buscar página..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full px-3 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+        </div>
 
         <nav className="mt-4 flex-1 overflow-auto space-y-2">
           {filteredPages.length === 0 ? (
@@ -90,11 +99,11 @@ export default function Sidebar() {
                 href={`/page/${page.id}`}
                 onClick={() => setOpen(false)}
                 className={`block px-3 py-2 rounded-lg text-sm truncate transition
-    ${
-      pathname === `/page/${page.id}`
-        ? "bg-[#1f1f1f] text-white font-semibold border border-blue-500"
-        : "hover:bg-[#1f1f1f] text-gray-300"
-    }`}
+                ${
+                  pathname === `/page/${page.id}`
+                    ? "bg-[#1f1f1f] text-white font-semibold border border-blue-500"
+                    : "hover:bg-[#1f1f1f] text-gray-300"
+                }`}
               >
                 {page.title || "Sin título"}
               </Link>
@@ -102,6 +111,10 @@ export default function Sidebar() {
           )}
         </nav>
       </aside>
+      <CreatePageModal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+      />
     </>
   )
 }
