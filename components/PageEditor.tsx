@@ -3,9 +3,12 @@ import { useParams, notFound } from "next/navigation"
 import { useState, useEffect } from "react"
 import { getPages, savePages } from "@/lib/storage"
 import { Page } from "@/types/page"
+import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 
 export default function PageEditor() {
   const params = useParams<{ id: string }>()
+  const router = useRouter()
   const [page, setPage] = useState<Page | null | undefined>(undefined)
 
   useEffect(() => {
@@ -29,6 +32,13 @@ export default function PageEditor() {
 
   return (
     <main className="p-6 space-y-6 text-gray-100 animate-fadeIn">
+      <button
+        onClick={() => router.push("/")}
+        className="flex items-center gap-2 text-sm text-gray-300 hover:text-white mb-4 transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Volver
+      </button>
       <input
         value={page.title}
         onChange={(e) => updatePage({ title: e.target.value })}
