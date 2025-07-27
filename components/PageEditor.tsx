@@ -12,7 +12,6 @@ export default function PageEditor() {
   const router = useRouter()
   const [page, setPage] = useState<Page | null | undefined>(undefined)
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle")
-
   const debouncedPage = useDebounce(page, 500)
 
   useEffect(() => {
@@ -42,6 +41,45 @@ export default function PageEditor() {
     setStatus("saving")
   }
 
+  function format(type: "bold" | "italic" | "heading" | "code") {
+    const textarea = document.querySelector("textarea")
+    if (!textarea || !page) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selected = page.content.slice(start, end)
+
+    let formatted = selected
+    switch (type) {
+      case "bold":
+        formatted = `**${selected || "texto"}**`
+        break
+      case "italic":
+        formatted = `*${selected || "texto"}*`
+        break
+      case "heading":
+        formatted = `# ${selected || "Título"}`
+        break
+      case "code":
+        formatted = `\`\`\`\n${selected || "código"}\n\`\`\``
+        break
+    }
+
+    const updatedContent =
+      page.content.slice(0, start) + formatted + page.content.slice(end)
+
+    updatePage({ content: updatedContent })
+
+    // Reposiciona el cursor después de aplicar formato
+    setTimeout(() => {
+      textarea.focus()
+      textarea.setSelectionRange(
+        start + (type === "heading" ? 2 : type === "code" ? 4 : 2),
+        start + formatted.length - (type === "code" ? 4 : 2)
+      )
+    }, 0)
+  }
+
   if (page === undefined) return <p className="text-gray-400">Cargando...</p>
   if (page === null) return notFound()
 
@@ -69,6 +107,13 @@ export default function PageEditor() {
         placeholder="Título de la página"
       />
 
+      <div className="flex gap-2 flex-wrap mb-2">
+        <FormatButton label="B" onClick={() => format("bold")} />
+        <FormatButton label="I" onClick={() => format("italic")} />
+        <FormatButton label="H1" onClick={() => format("heading")} />
+        <FormatButton label="Code" onClick={() => format("code")} />
+      </div>
+
       <textarea
         value={page.content}
         onChange={(e) => updatePage({ content: e.target.value })}
@@ -76,5 +121,22 @@ export default function PageEditor() {
         placeholder="Escribe tu contenido aquí..."
       />
     </main>
+  )
+}
+
+function FormatButton({
+  label,
+  onClick
+}: {
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="bg-[#2a2a2a] hover:bg-[#333] border border-gray-700 text-sm text-gray-200 px-3 py-1 rounded-lg transition"
+    >
+      {label}
+    </button>
   )
 }
