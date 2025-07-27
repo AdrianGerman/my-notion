@@ -6,6 +6,7 @@ import { Page } from "@/types/page"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
+import ReactMarkdown from "react-markdown"
 
 export default function PageEditor() {
   const params = useParams<{ id: string }>()
@@ -70,7 +71,6 @@ export default function PageEditor() {
 
     updatePage({ content: updatedContent })
 
-    // Reposiciona el cursor después de aplicar formato
     setTimeout(() => {
       textarea.focus()
       textarea.setSelectionRange(
@@ -84,11 +84,11 @@ export default function PageEditor() {
   if (page === null) return notFound()
 
   return (
-    <main className="p-6 space-y-6 text-gray-100 animate-fadeIn max-w-3xl mx-auto">
-      <div className="flex items-center justify-between">
+    <main className="p-6 text-gray-100 animate-fadeIn max-w-7xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-sm text-gray-300 hover:text-white mb-4 transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+          className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver
@@ -103,23 +103,34 @@ export default function PageEditor() {
       <input
         value={page.title}
         onChange={(e) => updatePage({ title: e.target.value })}
-        className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
+        className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition mb-4"
         placeholder="Título de la página"
       />
 
-      <div className="flex gap-2 flex-wrap mb-2">
-        <FormatButton label="B" onClick={() => format("bold")} />
-        <FormatButton label="I" onClick={() => format("italic")} />
-        <FormatButton label="H1" onClick={() => format("heading")} />
-        <FormatButton label="Code" onClick={() => format("code")} />
-      </div>
+      <div className="lg:flex lg:gap-6">
+        <div className="lg:w-1/2 space-y-4">
+          <div className="flex gap-2 flex-wrap">
+            <FormatButton label="B" onClick={() => format("bold")} />
+            <FormatButton label="I" onClick={() => format("italic")} />
+            <FormatButton label="H1" onClick={() => format("heading")} />
+            <FormatButton label="Code" onClick={() => format("code")} />
+          </div>
 
-      <textarea
-        value={page.content}
-        onChange={(e) => updatePage({ content: e.target.value })}
-        className="w-full min-h-[300px] resize-none bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 transition text-base leading-relaxed"
-        placeholder="Escribe tu contenido aquí..."
-      />
+          <textarea
+            value={page.content}
+            onChange={(e) => updatePage({ content: e.target.value })}
+            className="w-full min-h-[300px] resize-none bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 transition text-base leading-relaxed"
+            placeholder="Escribe tu contenido aquí..."
+          />
+        </div>
+
+        <div className="lg:w-1/2 space-y-4 mt-8 lg:mt-0">
+          <h2 className="text-xl font-semibold mb-1">Vista previa</h2>
+          <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-4 prose prose-invert max-w-none">
+            <ReactMarkdown>{page.content}</ReactMarkdown>
+          </div>
+        </div>
+      </div>
     </main>
   )
 }
