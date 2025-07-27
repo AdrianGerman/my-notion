@@ -5,12 +5,15 @@ import { getPages, savePages } from "@/lib/storage"
 import { Page } from "@/types/page"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
+import { useDebounce } from "@/hooks/useDebounce"
 
 export default function PageEditor() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const [page, setPage] = useState<Page | null | undefined>(undefined)
-  const [saving, setSaving] = useState(false)
+  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle")
+
+  const debouncedPage = useDebounce(page, 500)
 
   useEffect(() => {
     const pages = getPages()
@@ -18,14 +21,25 @@ export default function PageEditor() {
     setPage(found || null)
   }, [params.id])
 
+  useEffect(() => {
+    if (!debouncedPage) return
+    const pages = getPages().map((p) =>
+      p.id === debouncedPage.id ? debouncedPage : p
+    )
+    savePages(pages)
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: "notion-mini-pages" })
+    )
+    setStatus("saved")
+    const timer = setTimeout(() => setStatus("idle"), 1000)
+    return () => clearTimeout(timer)
+  }, [debouncedPage])
+
   function updatePage(updates: Partial<Page>) {
     if (!page) return
-    const updatedPage = { ...page, ...updates }
-    const pages = getPages().map((p) => (p.id === page.id ? updatedPage : p))
-    savePages(pages)
-    setPage(updatedPage)
-    setSaving(true)
-    setTimeout(() => setSaving(false), 500)
+    const updated = { ...page, ...updates }
+    setPage(updated)
+    setStatus("saving")
   }
 
   if (page === undefined) return <p className="text-gray-400">Cargando...</p>
@@ -42,11 +56,10 @@ export default function PageEditor() {
           Volver
         </button>
 
-        {saving && (
-          <span className="text-sm text-blue-400 animate-pulse">
-            Guardando...
-          </span>
-        )}
+        <span className="text-sm text-blue-400 animate-pulse">
+          {status === "saving" && "Guardando..."}
+          {status === "saved" && "✓ Guardado"}
+        </span>
       </div>
 
       <input
