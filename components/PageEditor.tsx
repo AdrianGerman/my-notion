@@ -6,7 +6,11 @@ import { Page } from "@/types/page"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
-import ReactMarkdown from "react-markdown"
+import dynamic from "next/dynamic"
+import "@uiw/react-md-editor/markdown-editor.css"
+import "@uiw/react-markdown-preview/markdown.css"
+
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false })
 
 export default function PageEditor() {
   const params = useParams<{ id: string }>()
@@ -42,49 +46,11 @@ export default function PageEditor() {
     setStatus("saving")
   }
 
-  function format(type: "bold" | "italic" | "heading" | "code") {
-    const textarea = document.querySelector("textarea")
-    if (!textarea || !page) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selected = page.content.slice(start, end)
-
-    let formatted = selected
-    switch (type) {
-      case "bold":
-        formatted = `**${selected || "texto"}**`
-        break
-      case "italic":
-        formatted = `*${selected || "texto"}*`
-        break
-      case "heading":
-        formatted = `# ${selected || "Título"}`
-        break
-      case "code":
-        formatted = `\`\`\`\n${selected || "código"}\n\`\`\``
-        break
-    }
-
-    const updatedContent =
-      page.content.slice(0, start) + formatted + page.content.slice(end)
-
-    updatePage({ content: updatedContent })
-
-    setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(
-        start + (type === "heading" ? 2 : type === "code" ? 4 : 2),
-        start + formatted.length - (type === "code" ? 4 : 2)
-      )
-    }, 0)
-  }
-
   if (page === undefined) return <p className="text-gray-400">Cargando...</p>
   if (page === null) return notFound()
 
   return (
-    <main className="p-6 text-gray-100 animate-fadeIn max-w-7xl mx-auto">
+    <main className="p-6 text-gray-100 animate-fadeIn max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => router.push("/")}
@@ -103,51 +69,20 @@ export default function PageEditor() {
       <input
         value={page.title}
         onChange={(e) => updatePage({ title: e.target.value })}
-        className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition mb-4"
+        className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition mb-6"
         placeholder="Título de la página"
       />
 
-      <div className="lg:flex lg:gap-6">
-        <div className="lg:w-1/2 space-y-4">
-          <div className="flex gap-2 flex-wrap">
-            <FormatButton label="B" onClick={() => format("bold")} />
-            <FormatButton label="I" onClick={() => format("italic")} />
-            <FormatButton label="H1" onClick={() => format("heading")} />
-            <FormatButton label="Code" onClick={() => format("code")} />
-          </div>
-
-          <textarea
-            value={page.content}
-            onChange={(e) => updatePage({ content: e.target.value })}
-            className="w-full min-h-[300px] resize-none bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 transition text-base leading-relaxed"
-            placeholder="Escribe tu contenido aquí..."
-          />
-        </div>
-
-        <div className="lg:w-1/2 space-y-4 mt-8 lg:mt-0">
-          <h2 className="text-xl font-semibold mb-1">Vista previa</h2>
-          <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-4 prose prose-invert max-w-none">
-            <ReactMarkdown>{page.content}</ReactMarkdown>
-          </div>
-        </div>
+      <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-4">
+        <MDEditor
+          value={page.content}
+          onChange={(value) => updatePage({ content: value || "" })}
+          height={500}
+          textareaProps={{
+            placeholder: "Escribe aquí en markdown..."
+          }}
+        />
       </div>
     </main>
-  )
-}
-
-function FormatButton({
-  label,
-  onClick
-}: {
-  label: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="bg-[#2a2a2a] hover:bg-[#333] border border-gray-700 text-sm text-gray-200 px-3 py-1 rounded-lg transition"
-    >
-      {label}
-    </button>
   )
 }
