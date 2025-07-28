@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 import dynamic from "next/dynamic"
+import remarkGfm from "remark-gfm"
 import "@uiw/react-md-editor/markdown-editor.css"
 import "@uiw/react-markdown-preview/markdown.css"
 
@@ -78,6 +79,9 @@ export default function PageEditor() {
           value={page.content}
           onChange={(value) => updatePage({ content: value || "" })}
           height={500}
+          previewOptions={{
+            remarkPlugins: [remarkGfm]
+          }}
           textareaProps={{
             placeholder: "Escribe aquí en markdown..."
           }}
