@@ -21,6 +21,29 @@ export default function PageEditor() {
   const debouncedPage = useDebounce(page, 500)
 
   useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const item = e.clipboardData?.items?.[0]
+      if (item?.type.includes("image")) {
+        const file = item.getAsFile()
+        if (file) {
+          const reader = new FileReader()
+          reader.onload = () => {
+            const base64 = reader.result as string
+            updatePage({
+              content:
+                (page?.content ?? "") + `\n\n![imagen pegada](${base64})\n`
+            })
+          }
+          reader.readAsDataURL(file)
+        }
+      }
+    }
+
+    document.addEventListener("paste", handlePaste)
+    return () => document.removeEventListener("paste", handlePaste)
+  }, [page])
+
+  useEffect(() => {
     const pages = getPages()
     const found = pages.find((p) => p.id === params.id)
     setPage(found || null)
