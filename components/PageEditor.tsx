@@ -1,9 +1,8 @@
 "use client"
-import { useParams, notFound } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useParams, notFound, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { getPages, savePages } from "@/lib/storage"
 import { Page } from "@/types/page"
-import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 import dynamic from "next/dynamic"
@@ -19,6 +18,26 @@ export default function PageEditor() {
   const [page, setPage] = useState<Page | null | undefined>(undefined)
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle")
   const debouncedPage = useDebounce(page, 500)
+
+  useEffect(() => {
+    const pages = getPages()
+    const found = pages.find((p) => p.id === params.id)
+    setPage(found || null)
+  }, [params.id])
+
+  useEffect(() => {
+    if (!debouncedPage) return
+    const pages = getPages().map((p) =>
+      p.id === debouncedPage.id ? debouncedPage : p
+    )
+    savePages(pages)
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: "notion-mini-pages" })
+    )
+    setStatus("saved")
+    const timer = setTimeout(() => setStatus("idle"), 1000)
+    return () => clearTimeout(timer)
+  }, [debouncedPage])
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
@@ -42,26 +61,6 @@ export default function PageEditor() {
     document.addEventListener("paste", handlePaste)
     return () => document.removeEventListener("paste", handlePaste)
   }, [page])
-
-  useEffect(() => {
-    const pages = getPages()
-    const found = pages.find((p) => p.id === params.id)
-    setPage(found || null)
-  }, [params.id])
-
-  useEffect(() => {
-    if (!debouncedPage) return
-    const pages = getPages().map((p) =>
-      p.id === debouncedPage.id ? debouncedPage : p
-    )
-    savePages(pages)
-    window.dispatchEvent(
-      new StorageEvent("storage", { key: "notion-mini-pages" })
-    )
-    setStatus("saved")
-    const timer = setTimeout(() => setStatus("idle"), 1000)
-    return () => clearTimeout(timer)
-  }, [debouncedPage])
 
   function updatePage(updates: Partial<Page>) {
     if (!page) return
@@ -97,7 +96,7 @@ export default function PageEditor() {
         placeholder="Título de la página"
       />
 
-      <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-4">
+      <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-4 shadow-lg">
         <MDEditor
           value={page.content}
           onChange={(value) => updatePage({ content: value || "" })}
