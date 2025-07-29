@@ -9,6 +9,7 @@ import dynamic from "next/dynamic"
 import remarkGfm from "remark-gfm"
 import "@uiw/react-md-editor/markdown-editor.css"
 import "@uiw/react-markdown-preview/markdown.css"
+import MarkdownPreview from "@uiw/react-markdown-preview"
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false })
 
@@ -17,6 +18,7 @@ export default function PageEditor() {
   const router = useRouter()
   const [page, setPage] = useState<Page | null | undefined>(undefined)
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle")
+  const [mode, setMode] = useState<"edit" | "preview">("edit")
   const debouncedPage = useDebounce(page, 500)
 
   useEffect(() => {
@@ -82,7 +84,6 @@ export default function PageEditor() {
           <ArrowLeft className="w-4 h-4" />
           Volver
         </button>
-
         <span className="text-sm text-blue-400 animate-pulse">
           {status === "saving" && "Guardando..."}
           {status === "saved" && "✓ Guardado"}
@@ -92,22 +93,52 @@ export default function PageEditor() {
       <input
         value={page.title}
         onChange={(e) => updatePage({ title: e.target.value })}
-        className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition mb-6"
+        className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition mb-4"
         placeholder="Título de la página"
       />
 
-      <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-4 shadow-lg">
-        <MDEditor
-          value={page.content}
-          onChange={(value) => updatePage({ content: value || "" })}
-          height={500}
-          previewOptions={{
-            remarkPlugins: [remarkGfm]
-          }}
-          textareaProps={{
-            placeholder: "Escribe aquí en markdown..."
-          }}
-        />
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setMode("edit")}
+          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+            mode === "edit"
+              ? "bg-[#1a1a1a] border border-b-0 border-gray-700 text-white"
+              : "bg-transparent border-b border-gray-700 text-gray-400"
+          }`}
+        >
+          ✏️ Editar
+        </button>
+        <button
+          onClick={() => setMode("preview")}
+          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+            mode === "preview"
+              ? "bg-[#1a1a1a] border border-b-0 border-gray-700 text-white"
+              : "bg-transparent border-b border-gray-700 text-gray-400"
+          }`}
+        >
+          👁️ Vista Previa
+        </button>
+      </div>
+
+      <div className="bg-[#1a1a1a] border border-gray-700 rounded-b-lg p-4 shadow-lg min-h-[400px]">
+        {mode === "edit" ? (
+          <MDEditor
+            value={page.content}
+            onChange={(value) => updatePage({ content: value || "" })}
+            height={500}
+            preview="edit"
+            previewOptions={{ remarkPlugins: [remarkGfm] }}
+            textareaProps={{
+              placeholder: "Escribe aquí en markdown..."
+            }}
+          />
+        ) : (
+          <MarkdownPreview
+            source={page.content}
+            className="prose prose-invert max-w-none px-4 py-2 rounded-sm"
+            remarkPlugins={[remarkGfm]}
+          />
+        )}
       </div>
     </main>
   )
