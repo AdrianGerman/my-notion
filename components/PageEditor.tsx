@@ -7,9 +7,10 @@ import { ArrowLeft } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 import dynamic from "next/dynamic"
 import remarkGfm from "remark-gfm"
+import MarkdownPreview from "@uiw/react-markdown-preview"
+import { jsPDF } from "jspdf"
 import "@uiw/react-md-editor/markdown-editor.css"
 import "@uiw/react-markdown-preview/markdown.css"
-import MarkdownPreview from "@uiw/react-markdown-preview"
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false })
 
@@ -59,7 +60,6 @@ export default function PageEditor() {
         }
       }
     }
-
     document.addEventListener("paste", handlePaste)
     return () => document.removeEventListener("paste", handlePaste)
   }, [page])
@@ -69,6 +69,29 @@ export default function PageEditor() {
     const updated = { ...page, ...updates }
     setPage(updated)
     setStatus("saving")
+  }
+
+  function exportToMarkdown() {
+    if (!page) return
+    const blob = new Blob([page.content], {
+      type: "text/markdown;charset=utf-8"
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${page.title || "pagina"}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function exportToPDF() {
+    if (!page) return
+    const doc = new jsPDF()
+    const lines = doc.splitTextToSize(page.content, 180)
+    doc.setFont("Helvetica", "normal")
+    doc.setFontSize(12)
+    doc.text(lines, 10, 20)
+    doc.save(`${page.title || "pagina"}.pdf`)
   }
 
   if (page === undefined) return <p className="text-gray-400">Cargando...</p>
@@ -117,6 +140,21 @@ export default function PageEditor() {
           }`}
         >
           👁️ Vista Previa
+        </button>
+      </div>
+
+      <div className="flex gap-2 mb-4 justify-end">
+        <button
+          onClick={exportToMarkdown}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+        >
+          Exportar .md
+        </button>
+        <button
+          onClick={exportToPDF}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+        >
+          Exportar PDF
         </button>
       </div>
 
