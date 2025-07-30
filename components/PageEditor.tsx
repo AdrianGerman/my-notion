@@ -1,22 +1,24 @@
 "use client"
 import { useParams, notFound, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { getPages, savePages } from "@/lib/storage"
 import { Page } from "@/types/page"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Download } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 import dynamic from "next/dynamic"
 import remarkGfm from "remark-gfm"
-import MarkdownPreview from "@uiw/react-markdown-preview"
-import { jsPDF } from "jspdf"
 import "@uiw/react-md-editor/markdown-editor.css"
 import "@uiw/react-markdown-preview/markdown.css"
+import MarkdownPreview from "@uiw/react-markdown-preview"
+import html2pdf from "html2pdf.js"
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false })
 
 export default function PageEditor() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const previewRef = useRef<HTMLDivElement | null>(null)
+
   const [page, setPage] = useState<Page | null | undefined>(undefined)
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle")
   const [mode, setMode] = useState<"edit" | "preview">("edit")
@@ -60,6 +62,7 @@ export default function PageEditor() {
         }
       }
     }
+
     document.addEventListener("paste", handlePaste)
     return () => document.removeEventListener("paste", handlePaste)
   }, [page])
@@ -71,27 +74,20 @@ export default function PageEditor() {
     setStatus("saving")
   }
 
-  function exportToMarkdown() {
-    if (!page) return
-    const blob = new Blob([page.content], {
-      type: "text/markdown;charset=utf-8"
-    })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${page.title || "pagina"}.md`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+  async function exportToPDF() {
+    if (!previewRef.current) return
 
-  function exportToPDF() {
-    if (!page) return
-    const doc = new jsPDF()
-    const lines = doc.splitTextToSize(page.content, 180)
-    doc.setFont("Helvetica", "normal")
-    doc.setFontSize(12)
-    doc.text(lines, 10, 20)
-    doc.save(`${page.title || "pagina"}.pdf`)
+    const element = previewRef.current
+
+    const opt = {
+      margin: 0.5,
+      filename: `${page?.title || "nota"}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
+    }
+
+    await html2pdf().set(opt).from(element).save()
   }
 
   if (page === undefined) return <p className="text-gray-400">Cargando...</p>
@@ -107,10 +103,22 @@ export default function PageEditor() {
           <ArrowLeft className="w-4 h-4" />
           Volver
         </button>
-        <span className="text-sm text-blue-400 animate-pulse">
-          {status === "saving" && "Guardando..."}
-          {status === "saved" && "✓ Guardado"}
-        </span>
+
+        <div className="flex items-center gap-3">
+          {mode === "preview" && (
+            <button
+              onClick={exportToPDF}
+              className="flex items-center gap-1 text-sm text-white px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              Exportar PDF
+            </button>
+          )}
+          <span className="text-sm text-blue-400 animate-pulse">
+            {status === "saving" && "Guardando..."}
+            {status === "saved" && "✓ Guardado"}
+          </span>
+        </div>
       </div>
 
       <input
@@ -123,7 +131,7 @@ export default function PageEditor() {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setMode("edit")}
-          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+          className={`px-4 py-2 rounded-t-lg text-sm font-medium cursor-pointer ${
             mode === "edit"
               ? "bg-[#1a1a1a] border border-b-0 border-gray-700 text-white"
               : "bg-transparent border-b border-gray-700 text-gray-400"
@@ -133,28 +141,13 @@ export default function PageEditor() {
         </button>
         <button
           onClick={() => setMode("preview")}
-          className={`px-4 py-2 rounded-t-lg text-sm font-medium ${
+          className={`px-4 py-2 rounded-t-lg text-sm font-medium cursor-pointer ${
             mode === "preview"
               ? "bg-[#1a1a1a] border border-b-0 border-gray-700 text-white"
               : "bg-transparent border-b border-gray-700 text-gray-400"
           }`}
         >
           👁️ Vista Previa
-        </button>
-      </div>
-
-      <div className="flex gap-2 mb-4 justify-end">
-        <button
-          onClick={exportToMarkdown}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
-        >
-          Exportar .md
-        </button>
-        <button
-          onClick={exportToPDF}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
-        >
-          Exportar PDF
         </button>
       </div>
 
@@ -171,11 +164,13 @@ export default function PageEditor() {
             }}
           />
         ) : (
-          <MarkdownPreview
-            source={page.content}
-            className="prose prose-invert max-w-none px-4 py-2 rounded-sm"
-            remarkPlugins={[remarkGfm]}
-          />
+          <div ref={previewRef}>
+            <MarkdownPreview
+              source={page.content}
+              className="prose prose-invert max-w-none px-4 py-2"
+              remarkPlugins={[remarkGfm]}
+            />
+          </div>
         )}
       </div>
     </main>
