@@ -3,7 +3,7 @@ import { useParams, notFound, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getPages, savePages } from "@/lib/storage"
 import { Page } from "@/types/page"
-import { ArrowLeft, Download } from "lucide-react"
+import { ArrowLeft, Download, Tag, X } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 import dynamic from "next/dynamic"
 import remarkGfm from "remark-gfm"
@@ -22,6 +22,7 @@ export default function PageEditor() {
   const [page, setPage] = useState<Page | null | undefined>(undefined)
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle")
   const [mode, setMode] = useState<"edit" | "preview">("edit")
+  const [newTag, setNewTag] = useState("")
   const debouncedPage = useDebounce(page, 500)
 
   useEffect(() => {
@@ -74,6 +75,15 @@ export default function PageEditor() {
     setStatus("saving")
   }
 
+  function addTag() {
+    const trimmed = newTag.trim()
+    if (!trimmed || page?.tags?.includes(trimmed)) return
+    updatePage({
+      tags: [...(page?.tags || []), trimmed]
+    })
+    setNewTag("")
+  }
+
   function exportToPDF() {
     if (!previewRef.current) return
 
@@ -99,6 +109,12 @@ export default function PageEditor() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  function removeTag(tag: string) {
+    updatePage({
+      tags: page?.tags?.filter((t) => t !== tag)
+    })
   }
 
   if (page === undefined) return <p className="text-gray-400">Cargando...</p>
@@ -147,6 +163,42 @@ export default function PageEditor() {
         className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition mb-4"
         placeholder="Título de la página"
       />
+
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-2 mb-2">
+          {page.tags?.map((tag) => (
+            <span
+              key={tag}
+              className="flex items-center bg-blue-800/50 text-blue-300 px-3 py-1 rounded-full text-sm"
+            >
+              <Tag className="w-3 h-3 mr-1" />
+              {tag}
+              <button
+                onClick={() => removeTag(tag)}
+                className="ml-2 text-gray-400 hover:text-white"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addTag()}
+            className="bg-[#1a1a1a] border border-gray-600 px-3 py-2 rounded-lg text-sm w-64"
+            placeholder="Agregar etiqueta..."
+          />
+          <button
+            onClick={addTag}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-lg"
+          >
+            Agregar
+          </button>
+        </div>
+      </div>
 
       <div className="flex gap-2 mb-4">
         <button
