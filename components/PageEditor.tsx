@@ -74,10 +74,8 @@ export default function PageEditor() {
     setStatus("saving")
   }
 
-  async function exportToPDF() {
+  function exportToPDF() {
     if (!previewRef.current) return
-
-    const element = previewRef.current
 
     const opt = {
       margin: 0.5,
@@ -87,7 +85,20 @@ export default function PageEditor() {
       jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
     }
 
-    await html2pdf().set(opt).from(element).save()
+    html2pdf().set(opt).from(previewRef.current).save()
+  }
+
+  function exportToMarkdown() {
+    if (!page?.content) return
+    const blob = new Blob([page.content], {
+      type: "text/markdown;charset=utf-8"
+    })
+    const link = document.createElement("a")
+    link.href = URL.createObjectURL(blob)
+    link.download = `${page.title || "nota"}.md`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   if (page === undefined) return <p className="text-gray-400">Cargando...</p>
@@ -106,13 +117,22 @@ export default function PageEditor() {
 
         <div className="flex items-center gap-3">
           {mode === "preview" && (
-            <button
-              onClick={exportToPDF}
-              className="flex items-center gap-1 text-sm text-white px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              Exportar PDF
-            </button>
+            <>
+              <button
+                onClick={exportToMarkdown}
+                className="flex items-center gap-1 text-sm text-white px-3 py-1 rounded-md bg-green-600 hover:bg-green-700 transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                Exportar .md
+              </button>
+              <button
+                onClick={exportToPDF}
+                className="flex items-center gap-1 text-sm text-white px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                Exportar PDF
+              </button>
+            </>
           )}
           <span className="text-sm text-blue-400 animate-pulse">
             {status === "saving" && "Guardando..."}
