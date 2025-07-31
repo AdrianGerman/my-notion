@@ -1,6 +1,7 @@
-export interface Page {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string;
+export type Page = {
+  id: string
+  title: string
+  content: string
+  tags?: string[]
+  createdAt: string
 }
