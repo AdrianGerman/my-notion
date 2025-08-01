@@ -66,7 +66,7 @@ export function PageList() {
       {sortedPages.map((page) => (
         <Link
           key={page.id}
-          href={`/${page.id}`}
+          href={`/page/${page.id}`}
           className="block p-4 bg-[#1a1a1a] border border-gray-700 rounded-lg hover:border-blue-600 transition"
         >
           <div className="flex items-center justify-between">
