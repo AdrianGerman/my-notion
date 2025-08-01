@@ -3,7 +3,7 @@ import { useParams, notFound, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getPages, savePages } from "@/lib/storage"
 import { Page } from "@/types/page"
-import { ArrowLeft, Download, Tag, X } from "lucide-react"
+import { ArrowLeft, Download, Tag, X, Star, StarOff } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 import dynamic from "next/dynamic"
 import remarkGfm from "remark-gfm"
@@ -157,12 +157,25 @@ export default function PageEditor() {
         </div>
       </div>
 
-      <input
-        value={page.title}
-        onChange={(e) => updatePage({ title: e.target.value })}
-        className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition mb-4"
-        placeholder="Título de la página"
-      />
+      <div className="flex items-center gap-2 mb-4">
+        <input
+          value={page.title}
+          onChange={(e) => updatePage({ title: e.target.value })}
+          className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-3xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
+          placeholder="Título de la página"
+        />
+        <button
+          onClick={() => updatePage({ favorite: !page.favorite })}
+          className={`p-2 rounded-lg transition ${
+            page.favorite
+              ? "text-yellow-400 hover:text-yellow-300"
+              : "text-gray-400 hover:text-white"
+          }`}
+          title={page.favorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+        >
+          {page.favorite ? <Star /> : <StarOff />}
+        </button>
+      </div>
 
       <div className="mb-6">
         <div className="flex flex-wrap gap-2 mb-2">
