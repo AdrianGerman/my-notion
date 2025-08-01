@@ -3,7 +3,7 @@ import { useParams, notFound, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getPages, savePages } from "@/lib/storage"
 import { Page } from "@/types/page"
-import { ArrowLeft, Download, Tag, X, Star, StarOff } from "lucide-react"
+import { ArrowLeft, Download, Tag, X, Star, StarOff, Trash } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 import dynamic from "next/dynamic"
 import remarkGfm from "remark-gfm"
@@ -84,6 +84,12 @@ export default function PageEditor() {
     setNewTag("")
   }
 
+  function removeTag(tag: string) {
+    updatePage({
+      tags: page?.tags?.filter((t) => t !== tag)
+    })
+  }
+
   function exportToPDF() {
     if (!previewRef.current) return
 
@@ -111,10 +117,14 @@ export default function PageEditor() {
     document.body.removeChild(link)
   }
 
-  function removeTag(tag: string) {
-    updatePage({
-      tags: page?.tags?.filter((t) => t !== tag)
-    })
+  function deletePage() {
+    if (!window.confirm("¿Estás seguro de eliminar esta página?")) return
+    const pages = getPages().filter((p) => p.id !== page?.id)
+    savePages(pages)
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: "notion-mini-pages" })
+    )
+    router.push("/")
   }
 
   if (page === undefined) return <p className="text-gray-400">Cargando...</p>
@@ -150,6 +160,13 @@ export default function PageEditor() {
               </button>
             </>
           )}
+          <button
+            onClick={deletePage}
+            className="flex items-center gap-1 text-sm text-white px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer"
+          >
+            <Trash className="w-4 h-4" />
+            Eliminar
+          </button>
           <span className="text-sm text-blue-400 animate-pulse">
             {status === "saving" && "Guardando..."}
             {status === "saved" && "✓ Guardado"}
