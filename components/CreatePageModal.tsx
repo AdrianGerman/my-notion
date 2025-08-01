@@ -23,7 +23,9 @@ export function CreatePageModal({
       id,
       title: title.trim() || "Nueva Página",
       content: "",
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      tags: [],
+      favorite: false
     }
     const pages = getPages()
     savePages([...pages, newPage])

@@ -4,4 +4,5 @@ export type Page = {
   content: string
   tags?: string[]
   createdAt: string
+  favorite: boolean
 }

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { getPages } from "@/lib/storage"
 import { Page } from "@/types/page"
 import Link from "next/link"
-import { Tag, XCircle } from "lucide-react"
+import { Tag, XCircle, Star } from "lucide-react"
 
 export function PageList() {
   const [pages, setPages] = useState<Page[]>([])
@@ -21,6 +21,10 @@ export function PageList() {
   const filtered = filter
     ? pages.filter((p) => p.tags?.includes(filter))
     : pages
+
+  const sortedPages = [...filtered].sort((a, b) => {
+    return (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0)
+  })
 
   return (
     <div className="space-y-4">
@@ -53,19 +57,23 @@ export function PageList() {
         </div>
       )}
 
-      {filtered.length === 0 && (
+      {sortedPages.length === 0 && (
         <p className="text-gray-400 text-sm">
           No hay páginas con esa etiqueta.
         </p>
       )}
 
-      {filtered.map((page) => (
+      {sortedPages.map((page) => (
         <Link
           key={page.id}
           href={`/${page.id}`}
           className="block p-4 bg-[#1a1a1a] border border-gray-700 rounded-lg hover:border-blue-600 transition"
         >
-          <h3 className="text-lg font-semibold text-white">{page.title}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white">{page.title}</h3>
+            {page.favorite && <Star className="w-5 h-5 text-yellow-400" />}
+          </div>
+
           {page.tags && page.tags.length > 0 && (
             <div className="mt-2 flex gap-2 flex-wrap">
               {page.tags.map((tag) => (
